@@ -1,0 +1,27 @@
+{
+  "name": "@xcc.com/compile-run-v2",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
+  "scripts": {
+    "build": "del-cli ./build/* && tsc",
+    "test": "npm run build && node test.js && bash test.sh",
+    "release": "npm version patch && npm run build && npm publish --access public"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.9.4",
+    "del-cli": "^5.0.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.202",
+    "lodash": "^4.17.21"
+  }
+}
