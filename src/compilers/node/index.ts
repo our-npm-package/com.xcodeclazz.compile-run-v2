@@ -1,80 +1,25 @@
-import * as path from 'path';
-import { FileHelper } from "../../functions/file-crud";
+import { executeNode } from '../_/sync';
 import { IResult } from "../../constants/execution-result";
-import { ChildProcess, StdioOptions, spawn } from "child_process";
-import { LangFileStructure } from '../../functions/lang-file-structure';
 import { IExecutionInput, IFileStream } from "../../constants/execution-input";
 
 class Node {
-
-  private listener: string = path.join(__dirname, '..', '_', 'async');
-  private stdio: StdioOptions = ["inherit", "inherit", "inherit", "ipc"];
-  private getNewProcess(): ChildProcess { return spawn("node", [this.listener], { stdio: this.stdio }); }
-
   async runSource(source: string): Promise<IResult>;
   async runSource(source: string, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<void>;
   async runSource(source: string, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
-    return new Promise((resolve, reject) => {
-        let process = this.getNewProcess();
-
-        const sources: IFileStream[] = [{ name: 'app.js', content: source, main: true }];
-        const { route, mainFile } = LangFileStructure.createNode(sources);
-
-        process.send({ ...options, cmd: options?.executionPath, arguments: [path.join(mainFile.path, mainFile.name)] });
-        process.on('error', (err) => reject(err));
-        process.on("message", (msg: IResult) => {
-            FileHelper.deleteLastFolderAsync(route);
-            if (callback) {
-                callback(msg);
-                resolve(msg);
-            } else resolve(msg);
-            process.kill();
-        });
-    });
+    return executeNode([{ name: 'app.js', content: source, main: true }], options, callback);
   };
 
   async runFile(source: IFileStream): Promise<IResult>;
   async runFile(source: IFileStream, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<void>;
   async runFile(source: IFileStream, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
-    return new Promise((resolve, reject) => {
-        let process = this.getNewProcess();
-
-        const { route, mainFile } = LangFileStructure.createNode([source]);
-
-        process.send({ ...options, cmd: options?.executionPath, arguments: [path.join(mainFile.path, mainFile.name)] });
-        process.on('error', (err) => reject(err));
-        process.on("message", (msg: IResult) => {
-            FileHelper.deleteLastFolderAsync(route);
-            if (callback) {
-                callback(msg);
-                resolve(msg);
-            } else resolve(msg);
-            process.kill();
-        });
-    });
+    return executeNode([source], options, callback);
   };
 
   async runFiles(sources: IFileStream[]): Promise<IResult>;
   async runFiles(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<void>;
   async runFiles(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
-    return new Promise((resolve, reject) => {
-        let process = this.getNewProcess();
-
-        const { route, mainFile } = LangFileStructure.createNode(sources);
-
-        process.send({ ...options, cmd: options?.executionPath, arguments: [path.join(mainFile.path, mainFile.name)] });
-        process.on('error', (err) => reject(err));
-        process.on("message", (msg: IResult) => {
-            FileHelper.deleteLastFolderAsync(route);
-            if (callback) {
-                callback(msg);
-                resolve(msg);
-            } else resolve(msg);
-            process.kill();
-        });
-    });
+    return executeNode(sources, options, callback);
   };
-
 }
 
-export default new Node();
+export const node = new Node();

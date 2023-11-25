@@ -3,7 +3,6 @@ import { IResult } from "../../constants/execution-result";
 import { IExecutionInput, IFileStream } from "../../constants/execution-input";
 
 class Cpp {
-
   async runSource(source: string): Promise<IResult>;
   async runSource(source: string, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<void>;
   async runSource(source: string, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
@@ -21,7 +20,6 @@ class Cpp {
   async runFiles(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
     return executeCpp(sources, options, callback);
   };
-
 }
 
-export default new Cpp();
+export const cpp = new Cpp();

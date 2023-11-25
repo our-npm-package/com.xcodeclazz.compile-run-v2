@@ -1,7 +1,4 @@
-const python = require('./build/compilers/python/index').default;
-const java = require('./build/compilers/java/index').default;
-const node = require('./build/compilers/node/index').default;
-const cpp = require('./build/compilers/cpp/index').default;
+const { python, java, node, cpp } = require('./build');
 
 cpp.runSource('#include <stdio.h> \n #include <iostream> \n using namespace std;\nint main() { cout<< "Hello"; return 0;}', {
     compilationPath: '',

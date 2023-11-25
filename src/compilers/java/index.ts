@@ -22,4 +22,4 @@ class Java {
   };
 }
 
-export default new Java();
+export const java = new Java();
