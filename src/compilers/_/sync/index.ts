@@ -3,6 +3,7 @@ import { LangFileStructure } from "../../../functions/lang-file-structure";
 import { IResult } from "../../../constants/execution-result";
 import { FileHelper } from "../../../functions/file-crud";
 import { spawn } from "child_process";
+import kill from 'tree-kill';
 import * as path from 'path';
 
 export function executeJava(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
@@ -35,6 +36,8 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
 
     const process = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
 
+    process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
+    process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
         if (exitCode != 0) {
             msg.status = 'failed';
@@ -42,7 +45,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            process.kill();
+            kill(process.pid!);
         }
     });
 
@@ -55,27 +58,55 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
             callback(msg);
             resolve(msg);
           } else resolve(msg);
-          process.kill();
+          kill(process.pid!);
         } else {
-          let output = "", error = "";
+          let error = "";
+          let output = "";
+          let stdoutSize = 0;
+          let stdoutErrSize = 0;
+
           let child = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
-          child.stdout.on("data", (data) => output += data.toString());
-          child.stderr.on("error", (data) => error += data.toString());
-          child.on("close", (runCode) => {
-            if (runCode === 0) {
-                msg.status = 'success';
-                msg.executionResult!.stdout = output;
-            } else {
-                msg.status = 'failed';
-                msg.executionResult!.stderr = error;
+          let stopwatch = setTimeout(() => { kill(child.pid!) }, options?.timeout);
+
+          if (options?.stdin) {
+            child.stdin?.on("error", (err) => { return; });
+            child.stdin?.write(options.stdin + '\r\n', (err) => {
+              if (!err) child.stdin?.end();
+            });
+          }
+
+          child.stdout?.on("end", () => {});
+          child.stdout?.on("close", () => {});
+          child.stdout?.on("data", (data) => {
+            output += data.toString();
+            if (options?.stdoutLimit) {
+              stdoutSize += data.length;
+              if (stdoutSize > options?.stdoutLimit) kill(child.pid!);
             }
+          });
+
+          child.stderr?.on("end", () => {});
+          child.stderr?.on("close", () => {});
+          child.stderr?.on("data", (data) => {
+            error += data.toString();
+            if (options?.stderrLimit) {
+              stdoutErrSize += data.length;
+              if (stdoutErrSize > options?.stderrLimit) kill(child.pid!);
+            }
+          });
+
+          child.on("close", (runCode) => {
+            clearTimeout(stopwatch);
+            msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
+            msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
+            msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
             FileHelper.deleteLastFolderAsync(route);
             if (callback) {
                 callback(msg);
                 resolve(msg);
             } else resolve(msg);
-            child.kill();
-            process.kill();
+            kill(child.pid!);
+            kill(process.pid!);
           });
         }
       } else {
@@ -84,7 +115,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
           callback(msg);
           resolve(msg);
         } else resolve(msg);
-        process.kill();
+        kill(process.pid!);
       }
     });
   });
@@ -115,6 +146,8 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
 
     const process = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
 
+    process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
+    process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
         if (exitCode != 0) {
             msg.status = 'failed';
@@ -122,7 +155,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            process.kill();
+            kill(process.pid!);
         }
     });
 
@@ -135,27 +168,55 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
             callback(msg);
             resolve(msg);
           } else resolve(msg);
-          process.kill();
+          kill(process.pid!);
         } else {
-          let output = "", error = "";
+          let error = "";
+          let output = "";
+          let stdoutSize = 0;
+          let stdoutErrSize = 0;
+
           let child = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
-          child.stdout.on("data", (data) => output += data.toString());
-          child.stderr.on("error", (data) => error += data.toString());
-          child.on("close", (runCode) => {
-            if (runCode === 0) {
-                msg.status = 'success';
-                msg.executionResult!.stdout = output;
-            } else {
-                msg.status = 'failed';
-                msg.executionResult!.stderr = error;
+          let stopwatch = setTimeout(() => { kill(child.pid!) }, options?.timeout);
+
+          if (options?.stdin) {
+            child.stdin?.on("error", (err) => { return; });
+            child.stdin?.write(options.stdin + '\r\n', (err) => {
+              if (!err) child.stdin?.end();
+            });
+          }
+
+          child.stdout?.on("end", () => {});
+          child.stdout?.on("close", () => {});
+          child.stdout?.on("data", (data) => {
+            output += data.toString();
+            if (options?.stdoutLimit) {
+              stdoutSize += data.length;
+              if (stdoutSize > options?.stdoutLimit) kill(child.pid!);
             }
+          });
+
+          child.stderr?.on("end", () => {});
+          child.stderr?.on("close", () => {});
+          child.stderr?.on("data", (data) => {
+            error += data.toString();
+            if (options?.stderrLimit) {
+              stdoutErrSize += data.length;
+              if (stdoutErrSize > options?.stderrLimit) kill(child.pid!);
+            }
+          });
+
+          child.on("close", (runCode) => {
+            clearTimeout(stopwatch);
+            msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
+            msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
+            msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
             FileHelper.deleteLastFolderAsync(route);
             if (callback) {
                 callback(msg);
                 resolve(msg);
             } else resolve(msg);
-            child.kill();
-            process.kill();
+            kill(child.pid!);
+            kill(process.pid!);
           });
         }
       } else {
@@ -164,7 +225,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
           callback(msg);
           resolve(msg);
         } else resolve(msg);
-        process.kill();
+        kill(process.pid!);
       }
     });
   });
@@ -184,38 +245,67 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
         }
     };
 
-    let output = "", error = "";
+    let error = "";
+    let output = "";
+    let stdoutSize = 0;
+    let stdoutErrSize = 0;
     let { route, mainFile } = LangFileStructure.createPython(sources);
 
     const process = spawn(options!.executionPath, [path.join(mainFile.path, mainFile.name)]);
+    let stopwatch = setTimeout(() => { kill(process.pid!) }, options?.timeout);
+    
+    if (options?.stdin) {
+      process.stdin?.on("error", (err) => { return; });
+      process.stdin?.write(options.stdin + '\r\n', (err) => {
+        if (!err) process.stdin?.end();
+      });
+    }
+    
+    process.stdout?.on("end", () => {});
+    process.stdout?.on("close", () => {});
+    process.stdout?.on("data", (data) => {
+      output += data.toString();
+      if (options?.stdoutLimit) {
+        stdoutSize += data.length;
+        if (stdoutSize > options?.stdoutLimit) kill(process.pid!);
+      }
+    });
 
-    process.stdout.on("data", (data) => output += data.toString());
-    process.stderr.on("error", (data) => error += data.toString());
+    process.stderr?.on("end", () => {});
+    process.stderr?.on("close", () => {});
+    process.stderr?.on("data", (data) => {
+      error += data.toString();
+      if (options?.stderrLimit) {
+        stdoutErrSize += data.length;
+        if (stdoutErrSize > options?.stderrLimit) kill(process.pid!);
+      }
+    });
+
+    process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
+    process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
+        clearTimeout(stopwatch);
         if (exitCode != 0) {
             msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            process.kill();
+            kill(process.pid!);
         }
     });
 
     process.on("close", (runCode) => {
-      if (runCode === 0) {
-        msg.status = 'success';
-        msg.executionResult!.stdout = output;
-      } else {
-        msg.status = 'failed';
-        msg.executionResult!.stderr = error;
-      }
+      clearTimeout(stopwatch);
+      msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
+      msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
+      msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
       FileHelper.deleteLastFolderAsync(route);
       if (callback) {
           callback(msg);
           resolve(msg);
       } else resolve(msg);
-      process.kill();
+      kill(process.pid!);
     });
   });
 }
@@ -234,38 +324,67 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
         }
     };
 
-    let output = "", error = "";
+    let error = "";
+    let output = "";
+    let stdoutSize = 0;
+    let stdoutErrSize = 0;
     let { route, mainFile } = LangFileStructure.createNode(sources);
 
     const process = spawn(options!.executionPath, [path.join(mainFile.path, mainFile.name)]);
+    let stopwatch = setTimeout(() => { kill(process.pid!) }, options?.timeout);
 
-    process.stdout.on("data", (data) => output += data.toString());
-    process.stderr.on("error", (data) => error += data.toString());
+    if (options?.stdin) {
+      process.stdin?.on("error", (err) => { return; });
+      process.stdin?.write(options.stdin + '\r\n', (err) => {
+        if (!err) process.stdin?.end();
+      });
+    }
+
+    process.stdout?.on("end", () => {});
+    process.stdout?.on("close", () => {});
+    process.stdout?.on("data", (data) => {
+      output += data.toString();
+      if (options?.stdoutLimit) {
+        stdoutSize += data.length;
+        if (stdoutSize > options?.stdoutLimit) kill(process.pid!);
+      }
+    });
+
+    process.stderr?.on("end", () => {});
+    process.stderr?.on("close", () => {});
+    process.stderr?.on("data", (data) => {
+      error += data.toString();
+      if (options?.stderrLimit) {
+        stdoutErrSize += data.length;
+        if (stdoutErrSize > options?.stderrLimit) kill(process.pid!);
+      }
+    });
+
+    process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
+    process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
+        clearTimeout(stopwatch);
         if (exitCode != 0) {
             msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            process.kill();
+            kill(process.pid!);
         }
     });
 
     process.on("close", (runCode) => {
-      if (runCode === 0) {
-        msg.status = 'success';
-        msg.executionResult!.stdout = output;
-      } else {
-        msg.status = 'failed';
-        msg.executionResult!.stderr = error;
-      }
+      clearTimeout(stopwatch);
+      msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
+      msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
+      msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
       FileHelper.deleteLastFolderAsync(route);
       if (callback) {
           callback(msg);
           resolve(msg);
       } else resolve(msg);
-      process.kill();
+      kill(process.pid!);
     });
   });
 }

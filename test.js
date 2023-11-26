@@ -1,13 +1,13 @@
 const { python, java, node, cpp } = require('./build');
 
-cpp.runSource('#include <stdio.h> \n #include <iostream> \n using namespace std;\nint main() { cout<< "Hello"; return 0;}', {
+cpp.runSource('#include <stdio.h>\n#include<conio.h> \n #include <iostream> \n using namespace std;\nint main() { char s; cin >> s; \ncout<< s; \nreturn 0;}', {
     compilationPath: '',
     executionPath: 'g++',
     compileTimeout: 1000,
     stderrLimit: 1000,
-    stdin: 10,
-    timeout: 1000,
-    stdoutLimit: 1000,
+    stdin: 'abc',
+    stdoutLimit: 10000,
+    timeout: 3000,
 }, result => {
     console.log(result);
 })
@@ -17,9 +17,9 @@ cpp.runFiles([ { name: 'app.cpp', content: '#include <stdio.h> \n #include <iost
     executionPath: 'g++',
     compileTimeout: 1000,
     stderrLimit: 1000,
-    stdin: 10,
-    timeout: 1000,
-    stdoutLimit: 1000,
+    stdin: 'abc',
+    stdoutLimit: 10000,
+    timeout: 3000,
 }, result => {
     console.log(result);
 })
@@ -29,9 +29,9 @@ cpp.runFile({ name: 'app.cpp', content: '#include <stdio.h> \n #include <iostrea
     executionPath: 'g++',
     compileTimeout: 1000,
     stderrLimit: 1000,
-    stdin: 10,
-    timeout: 1000,
-    stdoutLimit: 1000,
+    stdin: 'gourav',
+    stdoutLimit: 10000,
+    timeout: 3000,
 }, result => {
     console.log(result);
 })
@@ -41,9 +41,9 @@ node.runSource('console.log(10*10);', {
     executionPath: 'node',
     compileTimeout: 1000,
     stderrLimit: 1000,
-    stdin: 10,
+    stdin: '',
+    stdoutLimit: 100,
     timeout: 1000,
-    stdoutLimit: 1000,
 }, result => {
     console.log(result);
 })
@@ -78,14 +78,14 @@ java.runFiles([{
     main: true 
 }, {
     name: 'Working.java',
-    content: "package com.xcodeclazz;\nimport java.util.*;\npublic class Working {\n\tpublic static void main() {\n\t\tSystem.out.println(\"Anjali Gupta\");\n\t}\n}", 
+    content: "package com.xcodeclazz;\nimport java.util.*;\npublic class Working {\n\tpublic static void main() {\n\t\tSystem.out.println(\"Anjali Gupta\"); for (int i=0; i< 1000000000; i++){ System.out.println(i); }\n\t}\n}", 
     main: false 
 }], {
     compilationPath: 'javac',
     executionPath: 'java',
     compileTimeout: 1000,
     stderrLimit: 1000,
-    stdin: 10,
+    stdin: 'samsung',
     stdoutLimit: 1000,
     timeout: 1000
 }, result => {
