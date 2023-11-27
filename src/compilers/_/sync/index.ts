@@ -46,7 +46,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            kill(process.pid!);
+            if (process?.pid) kill(process.pid);
         }
     });
 
@@ -59,7 +59,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
             callback(msg);
             resolve(msg);
           } else resolve(msg);
-          kill(process.pid!);
+          if (process?.pid) kill(process.pid);
         } else {
           let error = "";
           let output = "";
@@ -69,7 +69,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
           let child = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
           child.on("error", (code) => { console.log('child', code); });
 
-          let stopwatch = setTimeout(() => { kill(child.pid!) }, options?.timeout);
+          let stopwatch = setTimeout(() => { if (child?.pid) kill(child.pid); }, options?.timeout);
 
           if (options?.stdin) {
             child.stdin?.on("error", (err) => { return; });
@@ -84,7 +84,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
             output += data.toString();
             if (options?.stdoutLimit) {
               stdoutSize += data.length;
-              if (stdoutSize > options?.stdoutLimit) kill(child.pid!);
+              if (stdoutSize > options?.stdoutLimit) if (child?.pid) kill(child.pid);
             }
           });
 
@@ -94,7 +94,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
             error += data.toString();
             if (options?.stderrLimit) {
               stdoutErrSize += data.length;
-              if (stdoutErrSize > options?.stderrLimit) kill(child.pid!);
+              if (stdoutErrSize > options?.stderrLimit) if (child?.pid) kill(child.pid);
             }
           });
 
@@ -108,8 +108,8 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
                 callback(msg);
                 resolve(msg);
             } else resolve(msg);
-            kill(child.pid!);
-            kill(process.pid!);
+            if (child?.pid) kill(child.pid);
+            if (process?.pid) kill(process.pid);
           });
         }
       } else {
@@ -118,7 +118,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
           callback(msg);
           resolve(msg);
         } else resolve(msg);
-        kill(process.pid!);
+        if (process?.pid) kill(process.pid);
       }
     });
   });
@@ -159,7 +159,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            kill(process.pid!);
+            if (process?.pid) kill(process.pid);
         }
     });
 
@@ -172,7 +172,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
             callback(msg);
             resolve(msg);
           } else resolve(msg);
-          kill(process.pid!);
+          if (process?.pid) kill(process.pid);
         } else {
           let error = "";
           let output = "";
@@ -182,7 +182,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
           let child = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
           child.on("error", (code) => { console.log('child', code); });
 
-          let stopwatch = setTimeout(() => { kill(child.pid!) }, options?.timeout);
+          let stopwatch = setTimeout(() => { if(child?.pid) kill(child.pid); }, options?.timeout);
 
           if (options?.stdin) {
             child.stdin?.on("error", (err) => { return; });
@@ -197,7 +197,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
             output += data.toString();
             if (options?.stdoutLimit) {
               stdoutSize += data.length;
-              if (stdoutSize > options?.stdoutLimit) kill(child.pid!);
+              if (stdoutSize > options?.stdoutLimit) if (child?.pid) kill(child.pid);
             }
           });
 
@@ -207,7 +207,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
             error += data.toString();
             if (options?.stderrLimit) {
               stdoutErrSize += data.length;
-              if (stdoutErrSize > options?.stderrLimit) kill(child.pid!);
+              if (stdoutErrSize > options?.stderrLimit) if(child?.pid) kill(child.pid);
             }
           });
 
@@ -221,8 +221,8 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
                 callback(msg);
                 resolve(msg);
             } else resolve(msg);
-            kill(child.pid!);
-            kill(process.pid!);
+            if (child?.pid) kill(child.pid);
+            if (process?.pid) kill(process.pid);
           });
         }
       } else {
@@ -231,7 +231,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
           callback(msg);
           resolve(msg);
         } else resolve(msg);
-        kill(process.pid!);
+        if (process?.pid) kill(process.pid);
       }
     });
   });
@@ -260,7 +260,7 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
     const process = spawn(options!.executionPath, [path.join(mainFile.path, mainFile.name)]);
     process.on("error", (code) => { console.log('process', code); });
 
-    let stopwatch = setTimeout(() => { kill(process.pid!) }, options?.timeout);
+    let stopwatch = setTimeout(() => { if (process?.pid) kill(process.pid); }, options?.timeout);
     
     if (options?.stdin) {
       process.stdin?.on("error", (err) => { return; });
@@ -275,7 +275,7 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
       output += data.toString();
       if (options?.stdoutLimit) {
         stdoutSize += data.length;
-        if (stdoutSize > options?.stdoutLimit) kill(process.pid!);
+        if (stdoutSize > options?.stdoutLimit) if (process?.pid) kill(process.pid);
       }
     });
 
@@ -285,7 +285,7 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
       error += data.toString();
       if (options?.stderrLimit) {
         stdoutErrSize += data.length;
-        if (stdoutErrSize > options?.stderrLimit) kill(process.pid!);
+        if (stdoutErrSize > options?.stderrLimit) if (process?.pid) kill(process.pid);
       }
     });
 
@@ -299,7 +299,7 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            kill(process.pid!);
+            if (process?.pid) kill(process.pid);
         }
     });
 
@@ -313,7 +313,7 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
           callback(msg);
           resolve(msg);
       } else resolve(msg);
-      kill(process.pid!);
+      if (process?.pid) kill(process.pid);
     });
   });
 }
@@ -341,7 +341,7 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
     const process = spawn(options!.executionPath, [path.join(mainFile.path, mainFile.name)]);
     process.on("error", (code) => { console.log('process', code); });
 
-    let stopwatch = setTimeout(() => { kill(process.pid!) }, options?.timeout);
+    let stopwatch = setTimeout(() => { if (process?.pid) kill(process.pid); }, options?.timeout);
 
     if (options?.stdin) {
       process.stdin?.on("error", (err) => { return; });
@@ -356,7 +356,7 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
       output += data.toString();
       if (options?.stdoutLimit) {
         stdoutSize += data.length;
-        if (stdoutSize > options?.stdoutLimit) kill(process.pid!);
+        if (stdoutSize > options?.stdoutLimit) if (process?.pid) kill(process.pid);
       }
     });
 
@@ -366,7 +366,7 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
       error += data.toString();
       if (options?.stderrLimit) {
         stdoutErrSize += data.length;
-        if (stdoutErrSize > options?.stderrLimit) kill(process.pid!);
+        if (stdoutErrSize > options?.stderrLimit) if (process?.pid) kill(process.pid);
       }
     });
 
@@ -380,7 +380,7 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
             resolve(msg);
-            kill(process.pid!);
+            if (process?.pid) kill(process.pid);
         }
     });
 
@@ -394,7 +394,7 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
           callback(msg);
           resolve(msg);
       } else resolve(msg);
-      kill(process.pid!);
+      if (process?.pid) kill(process.pid);
     });
   });
 }
