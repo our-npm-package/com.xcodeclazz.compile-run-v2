@@ -36,6 +36,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
 
     const process = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
 
+    process.on("error", (code) => { console.log('process', code); });
     process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
     process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
@@ -66,6 +67,8 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
           let stdoutErrSize = 0;
 
           let child = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
+          child.on("error", (code) => { console.log('child', code); });
+
           let stopwatch = setTimeout(() => { kill(child.pid!) }, options?.timeout);
 
           if (options?.stdin) {
@@ -146,6 +149,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
 
     const process = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
 
+    process.on("error", (code) => { console.log('process', code); });
     process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
     process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
@@ -176,6 +180,8 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
           let stdoutErrSize = 0;
 
           let child = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
+          child.on("error", (code) => { console.log('child', code); });
+
           let stopwatch = setTimeout(() => { kill(child.pid!) }, options?.timeout);
 
           if (options?.stdin) {
@@ -252,6 +258,8 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
     let { route, mainFile } = LangFileStructure.createPython(sources);
 
     const process = spawn(options!.executionPath, [path.join(mainFile.path, mainFile.name)]);
+    process.on("error", (code) => { console.log('process', code); });
+
     let stopwatch = setTimeout(() => { kill(process.pid!) }, options?.timeout);
     
     if (options?.stdin) {
@@ -331,6 +339,8 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
     let { route, mainFile } = LangFileStructure.createNode(sources);
 
     const process = spawn(options!.executionPath, [path.join(mainFile.path, mainFile.name)]);
+    process.on("error", (code) => { console.log('process', code); });
+
     let stopwatch = setTimeout(() => { kill(process.pid!) }, options?.timeout);
 
     if (options?.stdin) {
