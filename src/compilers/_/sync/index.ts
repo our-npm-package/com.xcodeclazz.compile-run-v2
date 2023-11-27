@@ -144,7 +144,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
     let currentCmdIdx = 0;
     let commands = [
         { cmd: options?.executionPath, arguments: [path.join(mainFile.path, mainFile.name), '-o', path.join(mainFile.path, executable)] },
-        { cmd: path.join(mainFile.path, executable + '.exe'), arguments: [] },
+        { cmd: path.join(mainFile.path, executable), arguments: [] },
     ];
 
     const process = spawn(commands[currentCmdIdx].cmd!, commands[currentCmdIdx].arguments);
