@@ -31,7 +31,7 @@ The library stores the source files for programs in the home directory in a fold
 You can install it by using npm like below.
 
 ```cmd
-npm install @xcc.com/compile-run-v2 --save  
+npm install @com.xcodeclazz/compile-run-v2 --save  
 ```
 
 ## Usage
