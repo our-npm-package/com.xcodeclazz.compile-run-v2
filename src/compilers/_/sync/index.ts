@@ -6,6 +6,87 @@ import { spawn } from "child_process";
 import kill from 'tree-kill';
 import * as path from 'path';
 
+export function executeSingleJava(source: IFileStream, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
+  return new Promise((resolve, reject) => {
+    let msg: IResult = {
+      status: 'failed',
+      executionResult: {
+        memoryUsage: 0,
+        signal: null,
+        exitCode: 0,
+        cpuUsage: 0,
+        stdout: '',
+        stderr: '',
+      }
+    };
+
+    let error = "";
+    let output = "";
+    let stdoutSize = 0;
+    let stdoutErrSize = 0;
+    let { route } = LangFileStructure.createJavaFile(source);
+
+    const process = spawn(options!.executionPath, [path.join(route, source.name)]);
+    process.on("error", (code) => { console.log('process', code); });
+
+    let stopwatch = setTimeout(() => { if (process?.pid) kill(process.pid); }, options?.timeout);
+    
+    if (options?.stdin) {
+      process.stdin?.on("error", (err) => { return; });
+      process.stdin?.write(options.stdin + '\r\n', (err) => {
+        if (!err) process.stdin?.end();
+      });
+    }
+    
+    process.stdout?.on("end", () => {});
+    process.stdout?.on("close", () => {});
+    process.stdout?.on("data", (data) => {
+      output += data.toString();
+      if (options?.stdoutLimit) {
+        stdoutSize += data.length;
+        if (stdoutSize > options?.stdoutLimit) if (process?.pid) kill(process.pid);
+      }
+    });
+
+    process.stderr?.on("end", () => {});
+    process.stderr?.on("close", () => {});
+    process.stderr?.on("data", (data) => {
+      error += data.toString();
+      if (options?.stderrLimit) {
+        stdoutErrSize += data.length;
+        if (stdoutErrSize > options?.stderrLimit) if (process?.pid) kill(process.pid);
+      }
+    });
+
+    process.on("unhandledRejection", (reason, promise) => { console.error("Unhandled Rejection at:", promise, "reason:", reason);});
+    process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
+    process.on("exit", async (exitCode) => {
+        clearTimeout(stopwatch);
+        if (exitCode != 0) {
+            msg.status = 'failed';
+            msg.executionResult!.signal = 'SIGBREAK';
+            msg.executionResult!.exitCode = exitCode;
+            msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
+            resolve(msg);
+            if (process?.pid) kill(process.pid);
+        }
+    });
+
+    process.on("close", (runCode) => {
+      clearTimeout(stopwatch);
+      msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
+      msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
+      msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
+      FileHelper.deleteLastFolderAsync(route);
+      if (callback) {
+          callback(msg);
+          resolve(msg);
+      } else resolve(msg);
+      if (process?.pid) kill(process.pid);
+    });
+  });
+}
+
 export function executeJava(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
   return new Promise((resolve, reject) => {
     let msg: IResult = {
@@ -20,7 +101,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
         }
     };
 
-    let { route, mainFile, domain, moduleFilePath, sourceDir } = LangFileStructure.createJava(sources);
+    let { route, mainFile, domain, moduleFilePath, sourceDir } = LangFileStructure.createJavaFiles(sources);
 
     let currentCmdIdx = 0;
     let commands = [

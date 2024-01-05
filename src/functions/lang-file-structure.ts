@@ -83,7 +83,7 @@ export class LangFileStructure {
     return { route, mainFile };
   };
 
-  static createJava = (sources: IFileStream[]): any => {
+  static createJavaFiles = (sources: IFileStream[]): any => {
     const folder = LangFileStructure.getFolderName();
     const route = `${LangFileStructure.base}/java/${folder}`;
     const domain = "com.xcodeclazz";
@@ -120,5 +120,25 @@ export class LangFileStructure {
       moduleFilePath: paths[0].path,
       sourceDir: path.join(route, source),
     };
+  };
+
+  static createJavaFile = (source: IFileStream): any => {
+    const folder = LangFileStructure.getFolderName();
+    const route = `${LangFileStructure.base}/java/${folder}`;
+
+    if (!source.main) throw new Error("Please provide a main file");
+
+    const paths = [
+      {
+        path: path.join(route),
+        content: source.content,
+        name: source.name,
+        main: source.main,
+      },
+    ];
+
+    paths.forEach((e) => FileHelper.createFile(e.path, e.name, e.content));
+
+    return { route };
   };
 }
