@@ -8,6 +8,9 @@ export interface IExecutionResult {
 }
 
 export interface IResult {
+  ms: number;
+  lang: string;
+  isSucceed: boolean;
   status: "success" | "failed";
   executionResult: IExecutionResult | null;
 }

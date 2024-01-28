@@ -72,7 +72,13 @@ process.on("message", async (msg: IExecutionInputMessage) => {
       .then(
         (result) =>
           process.send &&
-          process.send({ status: result.stderr ? "failed" : "success", executionResult: result })
+          process.send({ 
+            ms: 0, // todo: change this
+            lang: 'unknow',
+            isSucceed: result.stderr,
+            status: result.stderr ? "failed" : "success", 
+            executionResult: result,
+          })
       )
       .catch((err) => {
         process.send && process.send({ status: "error", error: err });

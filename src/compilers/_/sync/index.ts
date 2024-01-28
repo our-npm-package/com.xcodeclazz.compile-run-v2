@@ -9,7 +9,10 @@ import * as path from 'path';
 export function executeSingleJava(source: IFileStream, options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
   return new Promise((resolve, reject) => {
     let msg: IResult = {
+      ms: 0,
+      lang: 'java',
       status: 'failed',
+      isSucceed: false,
       executionResult: {
         memoryUsage: 0,
         signal: null,
@@ -63,7 +66,6 @@ export function executeSingleJava(source: IFileStream, options?: IExecutionInput
     process.on("exit", async (exitCode) => {
         clearTimeout(stopwatch);
         if (exitCode != 0) {
-            msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
@@ -74,6 +76,8 @@ export function executeSingleJava(source: IFileStream, options?: IExecutionInput
 
     process.on("close", (runCode) => {
       clearTimeout(stopwatch);
+      msg.ms = 0; // todo: change this
+      msg.isSucceed = (runCode === 0 || runCode === null);
       msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
       msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
       msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
@@ -90,7 +94,10 @@ export function executeSingleJava(source: IFileStream, options?: IExecutionInput
 export function executeJava(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
   return new Promise((resolve, reject) => {
     let msg: IResult = {
+        ms: 0,
+        lang: 'java',
         status: 'failed',
+        isSucceed: false,
         executionResult: {
             memoryUsage: 0,
             signal: null,
@@ -122,7 +129,6 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
     process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
         if (exitCode != 0) {
-            msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
@@ -181,6 +187,8 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
 
           child.on("close", (runCode) => {
             clearTimeout(stopwatch);
+            msg.ms = 0; // todo: change this
+            msg.isSucceed = (runCode === 0 || runCode === null);
             msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
             msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
             msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
@@ -208,7 +216,10 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
 export function executeCpp(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
   return new Promise((resolve, reject) => {
     let msg: IResult = {
+        ms: 0,
+        lang: 'cpp',
         status: 'failed',
+        isSucceed: false,
         executionResult: {
             memoryUsage: 0,
             signal: null,
@@ -235,7 +246,6 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
     process.on("uncaughtException", (error) => { console.error("Uncaught Exception:", error); });
     process.on("exit", async (exitCode) => {
         if (exitCode != 0) {
-            msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
@@ -294,6 +304,8 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
 
           child.on("close", (runCode) => {
             clearTimeout(stopwatch);
+            msg.ms = 0; // todo: change this
+            msg.isSucceed = (runCode === 0 || runCode === null);
             msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
             msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
             msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
@@ -321,7 +333,10 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
 export function executePython(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
   return new Promise((resolve, reject) => {
     let msg: IResult = {
+        ms: 0,
+        lang: 'python',
         status: 'failed',
+        isSucceed: false,
         executionResult: {
             memoryUsage: 0,
             signal: null,
@@ -375,7 +390,6 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
     process.on("exit", async (exitCode) => {
         clearTimeout(stopwatch);
         if (exitCode != 0) {
-            msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
@@ -386,6 +400,8 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
 
     process.on("close", (runCode) => {
       clearTimeout(stopwatch);
+      msg.ms = 0; // todo: change this
+      msg.isSucceed = (runCode === 0 || runCode === null);
       msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
       msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
       msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
@@ -402,6 +418,9 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
 export function executeNode(sources: IFileStream[], options?: IExecutionInput, callback?: (response: IResult) => void): Promise<IResult | void> {
   return new Promise((resolve, reject) => {
     let msg: IResult = {
+        ms: 0,
+        lang: 'node',
+        isSucceed: false,
         status: 'failed',
         executionResult: {
             memoryUsage: 0,
@@ -456,7 +475,6 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
     process.on("exit", async (exitCode) => {
         clearTimeout(stopwatch);
         if (exitCode != 0) {
-            msg.status = 'failed';
             msg.executionResult!.signal = 'SIGBREAK';
             msg.executionResult!.exitCode = exitCode;
             msg.executionResult!.stderr = (await process.stderr.toArray()).toString();
@@ -467,6 +485,8 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
 
     process.on("close", (runCode) => {
       clearTimeout(stopwatch);
+      msg.ms = 0; // todo: change this
+      msg.isSucceed = (runCode === 0 || runCode === null);
       msg.status = (runCode === 0 || runCode === null) ? 'success' : 'failed';
       msg.executionResult!.stdout = output.slice(0, options?.stdoutLimit);
       msg.executionResult!.stderr = error.slice(0, options?.stderrLimit);
