@@ -16,7 +16,7 @@ export function executeSingleJava(source: IFileStream, options?: IExecutionInput
       executionResult: {
         memoryUsage: 0,
         signal: null,
-        exitCode: 0,
+        exitCode: 1,
         cpuUsage: 0,
         stdout: '',
         stderr: '',
@@ -101,7 +101,7 @@ export function executeJava(sources: IFileStream[], options?: IExecutionInput, c
         executionResult: {
             memoryUsage: 0,
             signal: null,
-            exitCode: 0,
+            exitCode: 1,
             cpuUsage: 0,
             stdout: '',
             stderr: '',
@@ -223,7 +223,7 @@ export function executeCpp(sources: IFileStream[], options?: IExecutionInput, ca
         executionResult: {
             memoryUsage: 0,
             signal: null,
-            exitCode: 0,
+            exitCode: 1,
             cpuUsage: 0,
             stdout: '',
             stderr: '',
@@ -340,7 +340,7 @@ export function executePython(sources: IFileStream[], options?: IExecutionInput,
         executionResult: {
             memoryUsage: 0,
             signal: null,
-            exitCode: 0,
+            exitCode: 1,
             cpuUsage: 0,
             stdout: '',
             stderr: '',
@@ -425,7 +425,7 @@ export function executeNode(sources: IFileStream[], options?: IExecutionInput, c
         executionResult: {
             memoryUsage: 0,
             signal: null,
-            exitCode: 0,
+            exitCode: 1,
             cpuUsage: 0,
             stdout: '',
             stderr: '',
